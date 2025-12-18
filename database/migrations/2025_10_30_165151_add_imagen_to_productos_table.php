@@ -1,0 +1,32 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::table('productos', function (Blueprint $table) {
+            // Añadimos la columna 'imagen' que puede ser nula
+            // 'after' es opcional, pero es bueno para organizar la tabla
+            $table->string('imagen', 255)->nullable()->after('precio'); 
+        });
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::table('productos', function (Blueprint $table) {
+            // Definimos cómo revertir el cambio (eliminar la columna)
+            $table->dropColumn('imagen');
+        });
+    }
+};
+
