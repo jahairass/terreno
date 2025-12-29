@@ -1,134 +1,120 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container">
+<div class="container-fluid py-4" style="background:#ffffff;min-height:100vh;">
 
-    {{-- Barra de Título y Botón Crear --}}
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h2 class="mb-0">Gestión de Clientes</h2>
-
-        <div class="d-flex">
-            {{-- Botón para CREAR CLIENTE --}}
-            @if (Auth::user()->hasPermissionTo('clientes', 'alta'))
-                <a href="{{ route('clientes.create') }}" class="btn btn-primary" style="white-space: nowrap;">
-                    <i class="fas fa-user-plus me-1"></i> Crear Nuevo Cliente
-                </a>
-            @endif
+    {{-- Encabezado --}}
+    <div class="d-flex justify-content-between align-items-center mb-4 p-4"
+         style="
+            background:linear-gradient(135deg,#0a2540,#0f3d63);
+            border-radius:18px;
+            border:1px solid rgba(255,255,255,.10);
+            box-shadow:0 20px 40px rgba(0,0,0,.6);
+         ">
+        <div>
+            <div class="text-uppercase"
+                 style="letter-spacing:.18em;font-size:.75rem;color:#93c5fd;">
+                Inmobiliaria • Clientes
+            </div>
+            <h3 class="fw-bold mb-0" style="color:#e6edf7;">
+                Módulo de Clientes
+            </h3>
         </div>
+
+        @if(Auth::user()->hasPermissionTo('clientes', 'alta'))
+            <a href="{{ route('clientes.create') }}"
+               class="btn"
+               style="
+                    background:#2563eb;
+                    color:#ffffff;
+                    font-weight:700;
+                    border-radius:14px;
+               ">
+                <i class="fas fa-user-plus me-1"></i> Nuevo Cliente
+            </a>
+        @endif
     </div>
 
-    {{-- Tabla --}}
-    <div class="table-responsive">
-        <table class="table table-striped table-hover align-middle">
-            <thead class="table-dark">
-                <tr>
-                    <th>ID Cliente</th>
-                    <th>Nombre</th>
-                    <th>Correo</th>
-                    <th>Teléfono</th>
-                    <th>Identificación</th>
-                    <th>Dirección</th>
-                    <th>Fecha de Registro</th>
-                    <th style="width: 200px;">Acciones</th>
-                </tr>
-            </thead>
-            <tbody>
-                @forelse ($clientes as $cliente)
-                <tr>
-                    <td>{{ $cliente->idCli }}</td>
-                    <td>{{ $cliente->Nombre }}</td>
-                    <td>{{ $cliente->correo }}</td>
-                    <td>{{ $cliente->telefono }}</td>
-                    <td>{{ $cliente->identificacion }}</td>
-                    <td>{{ $cliente->direccion }}</td>
-                    <td>{{ $cliente->created_at ? $cliente->created_at->format('Y-m-d') : 'N/A' }}</td>
-                    <td>
-                        {{-- Editar --}}
-                        @if (Auth::user()->hasPermissionTo('clientes', 'editar'))
-                            <a href="{{ route('clientes.edit', $cliente->idCli) }}" class="btn btn-sm btn-warning me-1" title="Editar">
-                                <i class="fas fa-edit me-1"></i> Editar
-                            </a>
+    {{-- Tarjetas --}}
+    <div class="row g-4">
+        @forelse($clientes as $cliente)
+        <div class="col-md-4">
+            <div class="card h-100 border-0"
+                 style="
+                    border-radius:22px;
+                    background:#07101e;
+                    color:#e6edf7;
+                    border:1px solid rgba(255,255,255,.10);
+                    box-shadow:0 15px 35px rgba(0,0,0,.65);
+                    transition:.25s;
+                 "
+                 onmouseover="this.style.transform='translateY(-6px)'"
+                 onmouseout="this.style.transform='translateY(0)'"
+            >
+                <div class="card-body p-4">
+
+                    {{-- Nombre --}}
+                    <h5 class="fw-bold mb-3" style="color:#38bdf8;">
+                        {{ $cliente->Nombre }}
+                    </h5>
+
+                    <div style="font-size:.95rem;">
+                        <p class="mb-1"><strong style="color:#93c5fd;">ID:</strong> {{ $cliente->id }}</p>
+                        <p class="mb-1"><strong style="color:#93c5fd;">Correo:</strong> {{ $cliente->correo ?? '—' }}</p>
+                        <p class="mb-1"><strong style="color:#93c5fd;">Teléfono:</strong> {{ $cliente->telefono ?? '—' }}</p>
+                        <p class="mb-1"><strong style="color:#93c5fd;">Identificación:</strong> {{ $cliente->identificacion ?? '—' }}</p>
+                        <p class="mb-1"><strong style="color:#93c5fd;">Dirección:</strong> {{ $cliente->direccion ?? '—' }}</p>
+                        <p class="mb-0" style="color:#64748b;">
+                            <strong>Fecha:</strong> {{ $cliente->fecha_compra ?? '—' }}
+                        </p>
+                    </div>
+
+                    <hr style="border-color:rgba(255,255,255,.12);margin:1.2rem 0;">
+
+                    {{-- Acciones --}}
+                    <div class="d-flex justify-content-between">
+                        @if(Auth::user()->hasPermissionTo('clientes', 'editar'))
+                        <a href="{{ route('clientes.edit', $cliente->id) }}"
+                           class="btn btn-sm"
+                           style="
+                                background:#0a2540;
+                                color:#e6edf7;
+                                border-radius:10px;
+                           ">
+                            ✏️ Editar
+                        </a>
                         @endif
 
-                        {{-- Eliminar (con modal) --}}
-                        @if (Auth::user()->hasPermissionTo('clientes', 'eliminar'))
-                            <button type="button" class="btn btn-sm btn-danger"
-                                    title="Eliminar"
-                                    data-bs-toggle="modal"
-                                    data-bs-target="#confirmDeleteModal"
-                                    data-item-nombre="{{ $cliente->Nombre }}"
-                                    data-form-action="{{ route('clientes.destroy', $cliente->idCli) }}">
-                                <i class="fas fa-trash me-1"></i> Eliminar
+                        @if(Auth::user()->hasPermissionTo('clientes', 'eliminar'))
+                        <form action="{{ route('clientes.destroy', $cliente->id) }}" method="POST">
+                            @csrf
+                            @method('DELETE')
+                            <button
+                                class="btn btn-sm"
+                                style="
+                                    background:#991b1b;
+                                    color:#ffffff;
+                                    border-radius:10px;
+                                "
+                                onclick="return confirm('¿Eliminar cliente?')">
+                                🗑️ Eliminar
                             </button>
+                        </form>
                         @endif
-                    </td>
-                </tr>
-                @empty
-                <tr>
-                    <td colspan="4" class="text-center text-muted p-4">No hay clientes registrados.</td>
-                </tr>
-                @endforelse
-            </tbody>
-        </table>
-    </div>
-</div>
+                    </div>
 
-
-{{-- Modal de Confirmación de Eliminación (Genérico) --}}
-<div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-danger text-white">
-                <h5 class="modal-title" id="confirmDeleteModalLabel">
-                    <i class="fas fa-exclamation-triangle me-2"></i> Confirmar Eliminación
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                ¿Estás seguro de que deseas eliminar a:
-                <br>
-                <strong id="modalItemNombre" class="fs-5"></strong>?
-                <br><br>
-                <small class="text-muted">Esta acción no se puede deshacer.</small>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
-                    <i class="fas fa-times me-1"></i> Cancelar
-                </button>
-
-                <form id="deleteForm" method="POST" action="">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" class="btn btn-danger">
-                        <i class="fas fa-trash me-1"></i> Sí, Eliminar
-                    </button>
-                </form>
+                </div>
             </div>
         </div>
+        @empty
+            <div class="col-12">
+                <div class="alert"
+                     style="background:#07101e;color:#93c5fd;border:1px solid rgba(255,255,255,.10);">
+                    No hay clientes registrados.
+                </div>
+            </div>
+        @endforelse
     </div>
+
 </div>
 @endsection
-
-
-{{-- Scripts para el Modal --}}
-@push('scripts')
-<script>
-    document.addEventListener('DOMContentLoaded', function () {
-
-        // Script del Modal de Eliminación
-        var confirmDeleteModal = document.getElementById('confirmDeleteModal');
-        if (confirmDeleteModal) {
-            confirmDeleteModal.addEventListener('show.bs.modal', function (event) {
-                var button = event.relatedTarget;
-                var itemNombre = button.getAttribute('data-item-nombre');
-                var formAction = button.getAttribute('data-form-action');
-                var modalBodyNombre = confirmDeleteModal.querySelector('#modalItemNombre');
-                var deleteForm = confirmDeleteModal.querySelector('#deleteForm');
-                modalBodyNombre.textContent = itemNombre;
-                deleteForm.setAttribute('action', formAction);
-            });
-        }
-
-    });
-</script>
-@endpush

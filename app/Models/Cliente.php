@@ -5,21 +5,21 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
-
 class Cliente extends Model
 {
-
     use HasFactory;
 
-    protected $primaryKey = 'idCli';
+    protected $table = 'clientes'; // por si acaso
+
+    // Tu PK es "id" (según tu tabla). Si fuera otro, cámbialo.
+    protected $primaryKey = 'id';
 
     protected $fillable = [
-        'Nombre',
+        'Nombre',          // <- OJO mayúscula como en tu BD
         'telefono',
         'correo',
         'identificacion',
-        'direccion'
-    
+        'direccion',
+        'fecha_compra',
     ];
-
 }

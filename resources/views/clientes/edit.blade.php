@@ -1,93 +1,185 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="container">
-    {{-- Card centrado --}}
-    <div class="card shadow-sm border-0 mx-auto" style="max-width: 500px;">
+<div class="container-fluid py-4" style="background:#ffffff;min-height:100vh;">
 
-        {{-- CAMBIO: Cabecera oscura y h4 para el título --}}
-        <div class="card-header bg-dark text-white border-0">
-            <h4 class="mb-0">Editar Cliente: {{ $cliente->Nombre }}</h4>
+    {{-- ENCABEZADO --}}
+    <div class="d-flex justify-content-between align-items-center mb-4 p-4"
+         style="
+            background:linear-gradient(135deg,#021a3a,#020f26);
+            border-radius:18px;
+            box-shadow:0 20px 45px rgba(2,15,38,.55);
+         ">
+        <div>
+            <div class="text-uppercase"
+                 style="letter-spacing:.18em;font-size:.75rem;color:#93c5fd;">
+                Inmobiliaria • Clientes
+            </div>
+            <h3 class="fw-bold mb-0" style="color:#ffffff;">
+                Editar cliente: {{ $cliente->Nombre }}
+            </h3>
         </div>
 
-        {{-- CAMBIO: card-body con p-4 --}}
-        <div class="card-body p-4">
-            <form action="{{ route('clientes.update', $cliente->idCli) }}" method="POST">
+        <a href="{{ route('clientes.index') }}"
+           class="btn"
+           style="
+                border:1px solid rgba(255,255,255,.45);
+                color:#ffffff;
+                border-radius:14px;
+           ">
+            ← Volver
+        </a>
+    </div>
+
+    {{-- CARD (AZUL ULTRA INTENSO) --}}
+    <div class="card border-0 shadow-sm"
+         style="
+            border-radius:22px;
+            background:linear-gradient(180deg,#07162e,#020f26);
+            border:1px solid rgba(255,255,255,.22);
+            color:#f8fafc;
+            box-shadow:0 25px 60px rgba(2,15,38,.6);
+         ">
+        <div class="card-body p-4 p-md-5">
+
+            {{-- ERRORES --}}
+            @if ($errors->any())
+                <div class="alert alert-danger border-0"
+                     style="border-radius:14px;">
+                    <div class="fw-semibold mb-1">Revisa el formulario</div>
+                    <ul class="mb-0 ps-3">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+
+            <form action="{{ route('clientes.update', $cliente->id) }}" method="POST">
                 @csrf
                 @method('PUT')
 
-                <div class="mb-3">
-                    <label for="Nombre" class="form-label">Nombre del Cliente</label>
-                    {{-- CAMBIO: Input group con ícono --}}
+                {{-- NOMBRE --}}
+                <div class="mb-4">
+                    <label class="form-label fw-semibold" style="color:#f8fafc;">
+                        Nombre del cliente
+                    </label>
                     <div class="input-group">
-                        <span class="input-group-text"><i class="fas fa-user fa-fw"></i></span>
-                        <input type="text" class="form-control @error('Nombre') is-invalid @enderror" id="Nombre" name="Nombre" value="{{ old('Nombre', $cliente->Nombre) }}" required>
+                        <span class="input-group-text"
+                              style="background:#020f26;border:1px solid rgba(255,255,255,.35);color:#38bdf8;">
+                            <i class="fas fa-user"></i>
+                        </span>
+                        <input type="text"
+                               name="nombre"
+                               class="form-control"
+                               value="{{ old('nombre', $cliente->Nombre) }}"
+                               required
+                               style="background:#ffffff;border:1px solid #1d4ed8;">
                     </div>
-                    @error('Nombre') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                 </div>
 
-                {{-- Teléfono --}}
-                <div class="mb-3">
-                    <label for="telefono" class="form-label">Teléfono</label>
-                    {{-- CAMBIO: Input group con ícono --}}
-                    <div class="input-group">
-                        <span class="input-group-text"><i class="fas fa-phone fa-fw"></i></span>
-                        <input type="text" class="form-control @error('telefono') is-invalid @enderror" id="telefono" name="telefono" value="{{ old('telefono', $cliente->telefono) }}">
+                <div class="row g-3">
+                    {{-- TELÉFONO --}}
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold" style="color:#f8fafc;">Teléfono</label>
+                        <div class="input-group">
+                            <span class="input-group-text"
+                                  style="background:#020f26;border:1px solid rgba(255,255,255,.35);color:#38bdf8;">
+                                <i class="fas fa-phone"></i>
+                            </span>
+                            <input type="text"
+                                   name="telefono"
+                                   class="form-control"
+                                   value="{{ old('telefono', $cliente->telefono) }}"
+                                   style="background:#ffffff;border:1px solid #1d4ed8;">
+                        </div>
                     </div>
-                    @error('telefono') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+
+                    {{-- CORREO --}}
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold" style="color:#f8fafc;">Correo</label>
+                        <div class="input-group">
+                            <span class="input-group-text"
+                                  style="background:#020f26;border:1px solid rgba(255,255,255,.35);color:#38bdf8;">
+                                <i class="fas fa-envelope"></i>
+                            </span>
+                            <input type="email"
+                                   name="correo"
+                                   class="form-control"
+                                   value="{{ old('correo', $cliente->correo) }}"
+                                   style="background:#ffffff;border:1px solid #1d4ed8;">
+                        </div>
+                    </div>
                 </div>
 
-                {{-- Correo --}}
-                <div class="mb-3">
-                    <label for="correo" class="form-label">Correo Electrónico</label>
-                    {{-- CAMBIO: Input group con ícono --}}
-                    <div class="input-group">
-                        <span class="input-group-text"><i class="fas fa-envelope fa-fw"></i></span>
-                        <input type="email" class="form-control @error('correo') is-invalid @enderror" id="correo" name="correo" value="{{ old('correo', $cliente->correo) }}">
+                <div class="row g-3 mt-2">
+                    {{-- IDENTIFICACIÓN --}}
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold" style="color:#f8fafc;">Identificación</label>
+                        <div class="input-group">
+                            <span class="input-group-text"
+                                  style="background:#020f26;border:1px solid rgba(255,255,255,.35);color:#38bdf8;">
+                                <i class="fas fa-id-card"></i>
+                            </span>
+                            <input type="text"
+                                   name="identificacion"
+                                   class="form-control"
+                                   value="{{ old('identificacion', $cliente->identificacion) }}"
+                                   style="background:#ffffff;border:1px solid #1d4ed8;">
+                        </div>
                     </div>
-                    @error('correo') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
+
+                    {{-- FECHA --}}
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold" style="color:#f8fafc;">Fecha (opcional)</label>
+                        <div class="input-group">
+                            <span class="input-group-text"
+                                  style="background:#020f26;border:1px solid rgba(255,255,255,.35);color:#38bdf8;">
+                                <i class="fas fa-calendar"></i>
+                            </span>
+                            <input type="date"
+                                   name="fecha_compra"
+                                   class="form-control"
+                                   value="{{ old('fecha_compra', $cliente->fecha_compra) }}"
+                                   style="background:#ffffff;border:1px solid #1d4ed8;">
+                        </div>
+                    </div>
                 </div>
 
-                {{-- Identificación --}}
-                <div class="mb-3">
-                    <label for="identificacion" class="form-label">Identificación</label>
-                    {{-- CAMBIO: Input group con ícono --}}
+                {{-- DIRECCIÓN --}}
+                <div class="mt-3">
+                    <label class="form-label fw-semibold" style="color:#f8fafc;">Dirección</label>
                     <div class="input-group">
-                        <span class="input-group-text"><i class="fas fa-user-plus fa-fw"></i></span>
-                        <input type="text" class="form-control @error('identificacion') is-invalid @enderror" id="identificacion" name="identificacion" value="{{ old('identificacion', $cliente->identificacion) }}">
+                        <span class="input-group-text"
+                              style="background:#020f26;border:1px solid rgba(255,255,255,.35);color:#38bdf8;">
+                            <i class="fas fa-location-dot"></i>
+                        </span>
+                        <input type="text"
+                               name="direccion"
+                               class="form-control"
+                               value="{{ old('direccion', $cliente->direccion) }}"
+                               style="background:#ffffff;border:1px solid #1d4ed8;">
                     </div>
-                    @error('identificacion') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
                 </div>
 
-                {{-- Dirección --}}
-                <div class="mb-3">
-                    <label for="direccion" class="form-label">Dirección</label>
-                    {{-- CAMBIO: Input group con ícono --}}
-                    <div class="input-group">
-                        <span class="input-group-text"><i class="fas fa-map-marker-alt fa-fw"></i></span>
-                        <input type="text" class="form-control @error('direccion') is-invalid @enderror" id="direccion" name="direccion" value="{{ old('direccion', $cliente->direccion) }}">
-                    </div>
-                    @error('direccion') <div class="invalid-feedback d-block">{{ $message }}</div> @enderror
-                </div>
-
-                {{-- Botones --}}
-                <div class="d-flex justify-content-between mt-4">
-                    <a href="{{ route('clientes.index') }}" class="btn btn-secondary">
-                        {{-- CAMBIO: Ícono añadido --}}
-                        <i class="fas fa-times me-1"></i> Cancelar
+                {{-- BOTONES --}}
+                <div class="d-flex justify-content-between mt-5">
+                    <a href="{{ route('clientes.index') }}"
+                       class="btn"
+                       style="border:1px solid rgba(255,255,255,.55);color:#ffffff;border-radius:14px;">
+                        ✖ Cancelar
                     </a>
 
-                    @if (Auth::user()->hasPermissionTo('clientes', 'editar'))
-                        <button type="submit" class="btn btn-success">
-                            {{-- CAMBIO: Ícono estandarizado --}}
-                            <i class="fas fa-sync me-1"></i> Actualizar Cliente
-                        </button>
-                    @else
-                        <span class="text-danger">No tienes permiso para actualizar este registro.</span>
-                    @endif
+                    <button type="submit"
+                            class="btn"
+                            style="background:#1d4ed8;color:#ffffff;border-radius:14px;font-weight:800;">
+                        💾 Guardar cambios
+                    </button>
                 </div>
+
             </form>
         </div>
     </div>
+
 </div>
 @endsection

@@ -2,73 +2,293 @@
 @tailwind components;
 @tailwind utilities;
 
-/* resources/css/app.css */
+/* ============================= */
+/* 1) VARIABLES GLOBALES (PALETA) */
+/* ============================= */
+:root{
+  --c-900:#03045e; /* navy */
+  --c-700:#0077b6; /* blue */
+  --c-500:#00b4d8; /* cyan */
+  --c-200:#90e0ef; /* light cyan */
+  --c-100:#caf0f8; /* very light */
 
-:root {
-    --color-verde-principal: #A8D8B9;
-    --color-verde-claro: #E0F2E9;
-    --color-verde-oscuro: #5F8575;
-    --color-fondo: #F7F9F7;
-    --color-texto-principal: #333333;
-    --color-borde: #d1d5db; /* Un gris suave para bordes */
+  --bg:#0b1020;           /* fondo */
+  --panel:#0f1730;        /* panel */
+  --panel-2:#121d3d;      /* hover */
+  --text:#eaf6ff;         /* texto */
+  --muted:#b8d9e6;        /* texto suave */
+  --border:rgba(144,224,239,.18);
+  --shadow:0 10px 25px rgba(0,0,0,.35);
 }
 
-/* ... el resto de tu CSS ... */
+/* ============================= */
+/* 2) BASE */
+/* ============================= */
+html, body{
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Nunito', sans-serif;
+}
 
+/* Enlaces */
+a{ color: var(--c-200); text-decoration:none; }
+a:hover{ color: var(--c-100); text-decoration:underline; }
 
-/* resources/css/app.css */
+/* ============================= */
+/* 3) TOPBAR (tu navbar actual) */
+/* ============================= */
+.top-header.navbar{
+  background: linear-gradient(90deg, var(--c-900), var(--c-700)) !important;
+  border-bottom: 1px solid rgba(202,240,248,.12);
+  box-shadow: 0 10px 25px rgba(0,0,0,.25);
+}
+.top-header .navbar-brand,
+.top-header .nav-link{
+  color: var(--c-100) !important;
+}
+.top-header .nav-link:hover{
+  color: var(--c-200) !important;
+}
+#sidebarToggle{
+  border: 1px solid rgba(144,224,239,.18);
+  background: rgba(15,23,48,.65);
+  color: var(--c-100);
+}
+#sidebarToggle:hover{
+  background: rgba(0,180,216,.12);
+  border-color: rgba(0,180,216,.25);
+}
 
-/* ... (después de las variables :root) ... */
+/* Dropdown en dark */
+.dropdown-menu{
+  background: var(--panel);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+.dropdown-item{
+  color: var(--text);
+}
+.dropdown-item:hover{
+  background: rgba(0,180,216,.12);
+  color: var(--c-100);
+}
+.dropdown-divider{
+  border-top: 1px solid rgba(144,224,239,.12);
+}
 
-/* Estilo General del Cuerpo */
+/* ============================= */
+/* 4) LAYOUT: SIDEBAR + MAIN */
+/* ============================= */
+.sidebar{
+  width: 280px;
+  min-height: 100vh;
+  position: fixed;
+  top: 56px; /* altura navbar bootstrap */
+  left: 0;
+  overflow-y: auto;
+
+  background: linear-gradient(180deg, var(--c-900), #081034 70%, #060a22);
+  border-right: 1px solid var(--border);
+  box-shadow: 6px 0 18px rgba(0,0,0,.25);
+  transition: width .2s ease;
+}
+
+/* Tu JS agrega .collapsed */
+.sidebar.collapsed{
+  width: 80px;
+}
+
+/* Main content */
+.main-content{
+  margin-left: 280px;
+  padding: 18px;
+  transition: margin-left .2s ease;
+}
+.main-content.collapsed{
+  margin-left: 80px;
+}
+
+/* ============================= */
+/* 5) SIDEBAR (estilos para navigation) */
+/*    (vamos a usar estas clases en layouts/navigation.blade.php) */
+/* ============================= */
+.app-sidebar__brand{
+  padding: 18px 16px;
+  border-bottom: 1px solid rgba(202,240,248,.12);
+}
+.app-sidebar__brand .title{
+  font-weight: 900;
+  margin: 0;
+  color: var(--c-100);
+}
+.app-sidebar__brand .subtitle{
+  margin: 0;
+  color: rgba(202,240,248,.75);
+  font-size: .85rem;
+}
+
+.app-sidebar__nav{ padding: 12px; }
+
+.app-sidebar__section{
+  margin-top: 14px;
+  margin-bottom: 6px;
+  color: rgba(202,240,248,.65);
+  font-size: .78rem;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.app-sidebar__link{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  padding:10px 12px;
+  border-radius: 12px;
+  text-decoration:none;
+  color: rgba(234,246,255,.92);
+  border:1px solid transparent;
+  transition: .2s ease;
+}
+
+.app-sidebar__link:hover{
+  background: rgba(0,180,216,.12);
+  border-color: rgba(0,180,216,.25);
+  color: var(--c-100);
+}
+
+.app-sidebar__link.active{
+  background: linear-gradient(90deg, rgba(0,119,182,.35), rgba(0,180,216,.18));
+  border-color: rgba(144,224,239,.28);
+  box-shadow: 0 0 0 1px rgba(0,180,216,.12) inset;
+}
+
+.app-sidebar__icon{
+  width: 18px;
+  text-align:center;
+  color: var(--c-200);
+}
+
+/* Cuando colapsa, ocultar texto y dejar íconos */
+.sidebar.collapsed .app-sidebar__link span.text{
+  display:none;
+}
+.sidebar.collapsed .app-sidebar__section{
+  display:none;
+}
+.sidebar.collapsed .app-sidebar__brand .subtitle{
+  display:none;
+}
+
+/* ============================= */
+/* 6) BOTONES */
+/* ============================= */
+.btn{
+  border-radius: 12px;
+  font-weight: 700;
+}
+
+.btn-primary{
+  background: linear-gradient(90deg, var(--c-700), var(--c-500)) !important;
+  border: 1px solid rgba(144,224,239,.25) !important;
+  color: #041018 !important;
+}
+.btn-primary:hover{
+  filter: brightness(1.05);
+  border-color: rgba(202,240,248,.35) !important;
+}
+
+.btn-edit{
+  background: rgba(144,224,239,.16);
+  border: 1px solid rgba(144,224,239,.30);
+  color: var(--c-100);
+}
+.btn-edit:hover{
+  background: rgba(144,224,239,.22);
+}
+
+/* Eliminar sobrio */
+.btn-danger{
+  background: rgba(220,53,69,.15) !important;
+  border: 1px solid rgba(220,53,69,.35) !important;
+  color: #ffd3d8 !important;
+}
+.btn-danger:hover{
+  background: rgba(220,53,69,.22) !important;
+}
+
+/* ============================= */
+/* 7) TABLAS */
+/* ============================= */
+.table{
+  color: var(--text);
+  border-color: var(--border);
+}
+
+.table thead{
+  background: linear-gradient(90deg, rgba(3,4,94,.95), rgba(0,119,182,.55));
+  color: var(--c-100);
+}
+.table thead th{
+  border-bottom: 1px solid rgba(202,240,248,.15) !important;
+}
+
+.table tbody tr{
+  background: rgba(15,23,48,.65);
+  transition: .15s ease;
+}
+.table tbody tr:nth-child(even){
+  background: rgba(18,29,61,.55);
+}
+.table tbody tr:hover{
+  background: rgba(0,180,216,.10);
+}
+.table td, .table th{
+  border-color: rgba(144,224,239,.12) !important;
+  vertical-align: middle;
+}
+
+/* contenedor para tabla */
+.table-wrap{
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: var(--shadow);
+}
+
+/* ============================= */
+/* 8) INPUTS */
+/* ============================= */
+.form-control, .form-select{
+  background: rgba(15,23,48,.9) !important;
+  border: 1px solid var(--border) !important;
+  color: var(--text) !important;
+}
+.form-control:focus, .form-select:focus{
+  border-color: rgba(0,180,216,.6) !important;
+  box-shadow: 0 0 0 .25rem rgba(0,180,216,.15) !important;
+}
+/* ... tu CSS existente ... */
+
+/* ====== FONDO GENERAL ====== */
 body {
-    background-color: var(--color-fondo);
-    color: var(--color-texto-principal);
-    font-family: 'Nunito', sans-serif; /* O la fuente que prefieras */
+    background-color: #caf0f8;
 }
 
-/* Estilo para los Botones Principales */
-.btn-primary {
-    background-color: var(--color-verde-principal);
-    color: white;
+/* ====== TÍTULO ====== */
+.page-title {
+    font-weight: 700;
+    color: #03045e;
+}
+
+/* ====== BOTÓN CREAR ====== */
+.btn-create {
+    background-color: #0077b6;
+    color: #ffffff;
+    border-radius: 8px;
+    padding: 8px 16px;
+    font-weight: 600;
     border: none;
-    padding: 0.75rem 1.5rem;
-    border-radius: 0.5rem;
-    font-weight: bold;
-    cursor: pointer;
-    transition: background-color 0.3s;
 }
 
-.btn-primary:hover {
-    background-color: var(--color-verde-oscuro);
-}
-
-/* Estilo para Enlaces */
-a {
-    color: var(--color-verde-principal);
-    text-decoration: none;
-}
-
-a:hover {
-    color: var(--color-verde-oscuro);
-    text-decoration: underline;
-}
-
-/* Estilo para Tarjetas o Paneles (muy común en dashboards) */
-.card, .panel {
-    background-color: #ffffff;
-    border: 1px solid var(--color-borde);
-    border-radius: 0.75rem;
-    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-}
-
-/* Estilo para la Barra de Navegación (ejemplo) */
-.navbar {
-    background-color: white;
-    border-bottom: 1px solid var(--color-borde);
-}
-
-/* Estilo para los Encabezados */
-h1, h2, h3, h4, h5, h6 {
-    color: var(--color-verde-oscuro);
-}
+/* ... resto del CSS ... */

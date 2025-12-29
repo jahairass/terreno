@@ -25,10 +25,10 @@
                 <i class="fas fa-bars"></i>
             </button>
 
-            <a class="navbar-brand me-auto" href="{{ route('dashboard') }}">
-                <i class="fas fa-bread-slice me-2"></i> {{ config('app.name', 'Panadería') }} POS
-            </a>
-
+          <a class="navbar-brand me-auto d-flex align-items-center text-white" href="{{ route('dashboard') }}">
+    <i class="fas fa-house fa-lg me-2 text-white"></i>
+    Terrenos
+</a>
             <ul class="navbar-nav ms-auto">
                 <li class="nav-item dropdown">
                     <a class="nav-link dropdown-toggle text-white" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">

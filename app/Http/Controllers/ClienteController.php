@@ -22,16 +22,26 @@ class ClienteController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'Nombre' => 'required|string|max:255',
-            'telefono' => 'nullable|string|max:255',
-            'correo' => 'nullable|string|max:255',
-            'identificacion' => 'nullable|string|max:255',
-            'direccion' => 'nullable|string|max:255'
+            'nombre'          => 'required|string|max:255',
+            'telefono'        => 'nullable|string|max:255',
+            'correo'          => 'nullable|email|max:255',
+            'identificacion'  => 'nullable|string|max:255',
+            'direccion'       => 'nullable|string|max:255',
+            'fecha_compra'    => 'nullable|date',
         ]);
 
-        Cliente::create($request->all());
+        Cliente::create([
+            'Nombre'         => $request->nombre, // columna real en BD
+            'telefono'       => $request->telefono,
+            'correo'         => $request->correo,
+            'identificacion' => $request->identificacion,
+            'direccion'      => $request->direccion,
+            'fecha_compra'   => $request->fecha_compra,
+        ]);
 
-        return redirect()->route('clientes.index')->with('success', 'Cliente creado exitosamente.');
+        return redirect()
+            ->route('clientes.index')
+            ->with('success', 'Cliente creado exitosamente.');
     }
 
     public function edit(Cliente $cliente)
@@ -42,24 +52,45 @@ class ClienteController extends Controller
     public function update(Request $request, Cliente $cliente)
     {
         $request->validate([
-            'Nombre' => ['required', 'string', 'max:255', Rule::unique('clientes', 'Nombre')->ignore($cliente->idCli, 'idCli')],
-            'telefono' => 'nullable|string|max:255',
-            'correo' => 'nullable|string|max:255',
-            'identificacion' => 'nullable|string|max:255',
-            'direccion' => 'nullable|string|max:255'
+            'nombre' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('clientes', 'Nombre')->ignore($cliente->id), // columna real
+            ],
+            'telefono'        => 'nullable|string|max:255',
+            'correo'          => 'nullable|email|max:255',
+            'identificacion'  => 'nullable|string|max:255',
+            'direccion'       => 'nullable|string|max:255',
+            'fecha_compra'    => 'nullable|date',
         ]);
 
-        $cliente->update($request->all());
-        return redirect()->route('clientes.index')->with('success', 'Cliente actualizado exitosamente.');
+        $cliente->update([
+            'Nombre'         => $request->nombre,
+            'telefono'       => $request->telefono,
+            'correo'         => $request->correo,
+            'identificacion' => $request->identificacion,
+            'direccion'      => $request->direccion,
+            'fecha_compra'   => $request->fecha_compra,
+        ]);
+
+        return redirect()
+            ->route('clientes.index')
+            ->with('success', 'Cliente actualizado exitosamente.');
     }
 
     public function destroy(Cliente $cliente)
     {
         try {
             $cliente->delete();
-            return redirect()->route('clientes.index')->with('success', 'Cliente eliminado exitosamente.');
+
+            return redirect()
+                ->route('clientes.index')
+                ->with('success', 'Cliente eliminado exitosamente.');
         } catch (\Illuminate\Database\QueryException $e) {
-            return redirect()->route('clientes.index')->with('error', 'No se puede eliminar el cliente porque tiene ventas registradas.');
+            return redirect()
+                ->route('clientes.index')
+                ->with('error', 'No se puede eliminar el cliente porque tiene ventas registradas.');
         }
     }
 }
