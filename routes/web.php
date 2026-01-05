@@ -86,7 +86,7 @@ Route::middleware('auth')->group(function () {
     Route::put('categorias/{categoria}', [CategoriaController::class, 'update'])->name('categorias.update')->middleware('permiso:categorias,editar');
     Route::delete('categorias/{categoria}', [CategoriaController::class, 'destroy'])->name('categorias.destroy')->middleware('permiso:categorias,eliminar');
 
-    // MÓDULO: PRODUCTOS
+    // MÓDULO: PRODUCTOS (Alias: productos)
     Route::get('productos', [ProductoController::class, 'index'])->name('productos.index')->middleware('permiso:productos,mostrar');
     Route::get('productos/create', [ProductoController::class, 'create'])->name('productos.create')->middleware('permiso:productos,alta');
     Route::post('productos', [ProductoController::class, 'store'])->name('productos.store')->middleware('permiso:productos,alta');
@@ -94,7 +94,7 @@ Route::middleware('auth')->group(function () {
     Route::put('productos/{producto}', [ProductoController::class, 'update'])->name('productos.update')->middleware('permiso:productos,editar');
     Route::delete('productos/{producto}', [ProductoController::class, 'destroy'])->name('productos.destroy')->middleware('permiso:productos,eliminar');
 
-    // MÓDULO: CLIENTES
+    // MÓDULO: CLIENTES (Alias: clientes)
     Route::get('clientes', [ClienteController::class, 'index'])->name('clientes.index')->middleware('permiso:clientes,mostrar');
     Route::get('clientes/create', [ClienteController::class, 'create'])->name('clientes.create')->middleware('permiso:clientes,alta');
     Route::post('clientes', [ClienteController::class, 'store'])->name('clientes.store')->middleware('permiso:clientes,alta');
@@ -103,15 +103,13 @@ Route::middleware('auth')->group(function () {
     Route::delete('clientes/{cliente}', [ClienteController::class, 'destroy'])->name('clientes.destroy')->middleware('permiso:clientes,eliminar');
 
     // ==========================================================
-    // MÓDULO: INVENTARIO (MAPA EN LA MISMA RUTA /inventario)
+    // MÓDULO: INVENTARIO
     // ==========================================================
     Route::get('inventario', [InventarioController::class, 'index'])
         ->name('inventario.index')
         ->middleware('permiso:inventario,mostrar');
 
-    // Editar terreno (mismo módulo inventario)
-    Route::get('inventario/{terreno}/edit', [InventarioController::class, 'edit'])
-        ->whereNumber('terreno')
+    Route::get('inventario/{producto}/edit', [InventarioController::class, 'edit'])
         ->name('inventario.edit')
         ->middleware('permiso:inventario,editar');
 
@@ -121,7 +119,7 @@ Route::middleware('auth')->group(function () {
         ->name('inventario.update')
         ->middleware('permiso:inventario,editar');
 
-    // PROVEEDORES
+    // PROVEEDORES (Alias: proveedores)
     Route::get('proveedores', [ProveedorController::class, 'index'])->name('proveedores.index')->middleware('permiso:proveedores,mostrar');
     Route::get('proveedores/create', [ProveedorController::class, 'create'])->name('proveedores.create')->middleware('permiso:proveedores,alta');
     Route::post('proveedores', [ProveedorController::class, 'store'])->name('proveedores.store')->middleware('permiso:proveedores,alta');
@@ -129,7 +127,7 @@ Route::middleware('auth')->group(function () {
     Route::put('proveedores/{proveedore}', [ProveedorController::class, 'update'])->name('proveedores.update')->middleware('permiso:proveedores,editar');
     Route::delete('proveedores/{proveedore}', [ProveedorController::class, 'destroy'])->name('proveedores.destroy')->middleware('permiso:proveedores,eliminar');
 
-    // COMPRAS
+    // COMPRAS (Alias: compras)
     Route::get('compras', [CompraController::class, 'index'])->name('compras.index')->middleware('permiso:compras,mostrar');
     Route::get('compras/create', [CompraController::class, 'create'])->name('compras.create')->middleware('permiso:compras,alta');
     Route::post('compras', [CompraController::class, 'store'])->name('compras.store')->middleware('permiso:compras,alta');
@@ -155,6 +153,7 @@ Route::middleware('auth')->group(function () {
     // ==========================================================
     // MÓDULO: PUNTO DE VENTA (TPV)
     // ==========================================================
+
     Route::get('tpv', [VentaController::class, 'tpv'])
         ->name('ventas.tpv')
         ->middleware('permiso:ventas,mostrar');
@@ -168,5 +167,12 @@ Route::middleware('auth')->group(function () {
         ->middleware('permiso:ventas,mostrar');
 
     Route::get('ventas/imprimir/{venta}', [VentaController::class, 'imprimirTicket'])
-        ->name('ventas.imprimir');
+        ->name('ventas.imprimir')
+        ->middleware('permiso:ventas,mostrar');
+
+    // ✅ NUEVA RUTA: CONTRATO PDF
+    Route::get('ventas/contrato/{venta}', [VentaController::class, 'contratoPDF'])
+        ->name('ventas.contrato')
+        ->middleware('permiso:ventas,mostrar');
+
 });
