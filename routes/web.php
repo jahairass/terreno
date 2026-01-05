@@ -102,22 +102,39 @@ Route::middleware('auth')->group(function () {
     Route::put('clientes/{cliente}', [ClienteController::class, 'update'])->name('clientes.update')->middleware('permiso:clientes,editar');
     Route::delete('clientes/{cliente}', [ClienteController::class, 'destroy'])->name('clientes.destroy')->middleware('permiso:clientes,eliminar');
 
-    // ==========================================================
-    // MÓDULO: INVENTARIO
-    // ==========================================================
-    Route::get('inventario', [InventarioController::class, 'index'])
-        ->name('inventario.index')
-        ->middleware('permiso:inventario,mostrar');
+ // ==========================================================
+// MÓDULO: INVENTARIO (LISTA + CREAR + EDITAR + ELIMINAR)
+// ==========================================================
 
-    Route::get('inventario/{producto}/edit', [InventarioController::class, 'edit'])
-        ->name('inventario.edit')
-        ->middleware('permiso:inventario,editar');
+Route::get('inventario', [InventarioController::class, 'index'])
+    ->name('inventario.index')
+    ->middleware('permiso:inventario,mostrar');
 
-    // Guardar terreno
-    Route::put('inventario/{terreno}', [InventarioController::class, 'update'])
-        ->whereNumber('terreno')
-        ->name('inventario.update')
-        ->middleware('permiso:inventario,editar');
+Route::get('inventario/create', [InventarioController::class, 'create'])
+    ->name('inventario.create')
+    ->middleware('permiso:inventario,alta');
+
+Route::post('inventario', [InventarioController::class, 'store'])
+    ->name('inventario.store')
+    ->middleware('permiso:inventario,alta');
+
+Route::get('inventario/{terreno}/edit', [InventarioController::class, 'edit'])
+    ->whereNumber('terreno')
+    ->name('inventario.edit')
+    ->middleware('permiso:inventario,editar');
+
+Route::put('inventario/{terreno}', [InventarioController::class, 'update'])
+    ->whereNumber('terreno')
+    ->name('inventario.update')
+    ->middleware('permiso:inventario,editar');
+
+// ✅ ELIMINAR
+Route::delete('inventario/{terreno}', [InventarioController::class, 'destroy'])
+    ->whereNumber('terreno')
+    ->name('inventario.destroy')
+    ->middleware('permiso:inventario,eliminar');
+
+
 
     // PROVEEDORES (Alias: proveedores)
     Route::get('proveedores', [ProveedorController::class, 'index'])->name('proveedores.index')->middleware('permiso:proveedores,mostrar');
@@ -136,19 +153,25 @@ Route::middleware('auth')->group(function () {
     Route::delete('compras/{compra}', [CompraController::class, 'destroy'])->name('compras.destroy')->middleware('permiso:compras,eliminar');
 
     // ==========================================================
-    // MÓDULO: GESTIÓN DE CAJA
     // ==========================================================
-    Route::get('cajas', [CajaController::class, 'index'])
-        ->name('cajas.index')
-        ->middleware('permiso:cajas,mostrar');
+// MÓDULO: GESTIÓN DE CAJA
+// ==========================================================
+Route::get('cajas', [CajaController::class, 'index'])
+    ->name('cajas.index')
+    ->middleware('permiso:cajas,mostrar');
 
-    Route::post('cajas/abrir', [CajaController::class, 'abrirCaja'])
-        ->name('cajas.abrir')
-        ->middleware('permiso:cajas,alta');
 
-    Route::post('cajas/cerrar', [CajaController::class, 'cerrarCaja'])
-        ->name('cajas.cerrar')
-        ->middleware('permiso:cajas,eliminar');
+// ✅ Movimiento manual
+Route::post('cajas/movimiento', [CajaController::class, 'registrarMovimiento'])
+    ->name('cajas.movimiento')
+    ->middleware('permiso:cajas,editar');
+
+    // ✅ COBROS (mensualidades, multas, adelantos)
+Route::post('cajas/cobro', [CajaController::class, 'registrarCobro'])
+    ->name('cajas.cobro')
+    ->middleware('permiso:cajas,editar');
+
+
 
     // ==========================================================
     // MÓDULO: PUNTO DE VENTA (TPV)
