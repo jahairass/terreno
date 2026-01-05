@@ -12,7 +12,7 @@ class Venta extends Model
     protected $table = 'ventas'; // Nombre de la tabla en la base de datos
 
     // Campos que se pueden llenar masivamente
-    protected $fillable = [
+    protected $fillable 'terreno_id' = [
         'cliente_id',       // ID del cliente (puede ser NULL)
         'user_id',          // ID del usuario (cajero) que hizo la venta
         'fecha_hora',       // Timestamp de la venta
@@ -20,6 +20,14 @@ class Venta extends Model
         'total',            // Monto total de la venta
         'monto_recibido',   // Monto que dio el cliente
         'monto_entregado',  // Cambio que se le dio al cliente
+        'terreno_id',
+        'fecha_compra',
+        'mensualidades',
+        'pago_inicial',
+        'monto_mensual',
+        'dia_pago',
+        'fecha_primer_pago',
+        'estado_venta',
     ];
 
     /**
@@ -57,4 +65,22 @@ class Venta extends Model
         // La clave foránea en 'detalle_ventas' es 'venta_id'
         return $this->hasMany(DetalleVenta::class, 'venta_id');
     }
+public function terreno()
+{
+    return $this->belongsTo(Terreno::class, 'terreno_id');
+}
+public function pagos()
+{
+    return $this->hasMany(\App\Models\PagoVenta::class, 'venta_id');
+}
+
+public function terreno()
+{
+    return $this->belongsTo(\App\Models\Terreno::class, 'terreno_id');
+}
+public function pagos()
+{
+    return $this->hasMany(\App\Models\PagoVenta::class);
+}
+
 }
