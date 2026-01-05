@@ -14,7 +14,7 @@ class Inventario extends Model
 
     // Campos reales de la tabla terrenos
     protected $fillable = [
-        'codigo',
+        'cliente',
         'alcaldia',
         'ubicacion',
         'precio',

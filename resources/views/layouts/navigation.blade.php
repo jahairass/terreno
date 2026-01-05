@@ -54,14 +54,14 @@
         </li>
     @endif
 
-    <!-- SECCIÓN POS & CAJA -->
+    <!-- SECCIÓN PAGOS -->
     @if (Auth::user()->hasPermissionTo('ventas', 'mostrar') || Auth::user()->hasPermissionTo('cajas', 'mostrar'))
 
         {{-- ===== CAMBIO: Línea divisoria más visible ===== --}}
         <hr class="my-2 mx-3" style="border-top: 5px solid var(--color-header); opacity: 0.4;">
 
         <li class="nav-item"> {{-- Quitado mt-3 --}}
-            <div class="sidebar-heading fw-bold ms-3">POS & CAJA</div>
+            <div class="sidebar-heading fw-bold ms-3">PAGOS </div>
         </li>
     @endif
 
@@ -113,7 +113,7 @@
         <li class="nav-item">
             {{-- CAMBIO: Corregido el 'active' para incluir sub-rutas --}}
             <a class="nav-link text-white {{ request()->routeIs('cajas.*') ? 'active' : '' }}" href="{{ route('cajas.index') }}">
-                <i class="fas fa-dollar-sign me-2"></i> Flujo de Caja
+                <i class="fas fa-dollar-sign me-2"></i> Cobros 
             </a>
         </li>
     @endif

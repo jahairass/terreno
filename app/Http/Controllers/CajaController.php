@@ -3,198 +3,170 @@
 namespace App\Http\Controllers;
 
 use App\Models\Caja;
-use App\Models\Venta; // <-- Asegurar que Venta esté importado
-use App\Models\MovimientoCaja; // <-- ¡IMPORTANTE AÑADIR ESTE!
+use App\Models\MovimientoCaja;
+use App\Models\Cliente;
+use App\Models\Compra;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class CajaController extends Controller
 {
     /**
-     * Muestra el estado actual de la caja.
+     * ✅ NUEVO: ya no manejamos caja abierta/cerrada.
+     * Esta función solo muestra la pantalla de cobros tipo "Cobrar y Entregar".
      */
     public function index()
     {
-        // Obtener la caja abierta por el usuario actual
-        $cajaAbierta = Caja::with('user')
-            ->where('user_id', Auth::id())
-            ->where('estado', 'abierta')
-            ->first();
+        // Clientes para selector
+        $clientes = Cliente::orderBy('Nombre')->get();
 
-        $movimientos = collect();
-        $saldoActual = 0;
-        $ventasEfectivo = 0; // <-- NUEVO: Inicializar variable para ventas en efectivo
-        $saldoMovimientos = 0; // <-- AÑADIDO: Inicializar saldoMovimientos
+        // Historial de movimientos recientes
+        $movimientos = MovimientoCaja::with('user')
+            ->orderBy('created_at', 'desc')
+            ->take(30)
+            ->get();
 
-        if ($cajaAbierta) {
-            // Obtener sus movimientos manuales
-            $movimientos = MovimientoCaja::where('caja_id', $cajaAbierta->id)
-                ->with('user') // <-- AÑADIDO: Cargar usuario aquí
-                ->orderBy('created_at', 'desc')
-                ->get();
-
-            // Calcular el saldo de movimientos manuales
-            $saldoMovimientos = $movimientos->sum(function ($mov) {
-                // Asumiendo que 'ingreso' suma y 'egreso' (u otro tipo) resta
-                return $mov->tipo === 'ingreso' ? $mov->monto : -$mov->monto;
-            });
-            
-            // <-- NUEVO: Calcular Ventas en Efectivo desde la apertura de esta caja -->
-            $ventasEfectivo = Venta::where('user_id', Auth::id()) // Ventas del usuario actual
-                                    ->where('metodo_pago', 'efectivo') // SOLO EFECTIVO
-                                    ->where('fecha_hora', '>=', $cajaAbierta->fecha_hora_apertura) // Desde que abrió caja
-                                    // ->where('caja_id', $cajaAbierta->id) // Si tuvieras caja_id en Ventas, sería más preciso
-                                    ->sum('total');
-            
-            // <-- MODIFICADO: Añadir ventas en efectivo al saldo actual -->
-            $saldoActual = $cajaAbierta->saldo_inicial + $saldoMovimientos + $ventasEfectivo;
-        }
-
-        // <-- MODIFICADO: Pasar $ventasEfectivo y $saldoMovimientos a la vista -->
-        return view('cajas.index', compact(
-            'cajaAbierta', 
-            'movimientos', 
-            'saldoActual', 
-            'ventasEfectivo', 
-            'saldoMovimientos' // Pasar también el total de movimientos
-        ));
+        return view('cajas.index', compact('clientes', 'movimientos'));
     }
 
     /**
-     * Abre una nueva caja (Sin cambios necesarios aquí).
+     * ✅ NUEVO: Obtener/crear una caja "sistema" para registrar movimientos,
+     * ya que eliminamos la apertura/cierre.
      */
-    public function abrirCaja(Request $request)
+    private function cajaSistemaId(): int
+    {
+        // Si ya existe una caja con estado 'sistema' úsala.
+        // Si no, crea una.
+        $caja = Caja::firstOrCreate(
+            ['estado' => 'sistema'],
+            [
+                'user_id' => Auth::id(),
+                'fecha_hora_apertura' => now(),
+                'saldo_inicial' => 0,
+            ]
+        );
+
+        return (int) $caja->id;
+    }
+
+    // ===================================================================
+    // =================== ✅ REGISTRAR COBRO (SIN CAJA ABIERTA) ==========
+    // ===================================================================
+    public function registrarCobro(Request $request)
     {
         $request->validate([
-            'saldo_inicial' => 'required|numeric|min:0',
+            'cliente_id' => 'required|exists:clientes,idCli',
+            'mensualidad' => 'required|numeric|min:1',
+            'mensualidades' => 'required|integer|min:1',
+            'fecha_vencimiento' => 'required|date',
+            'fecha_pago' => 'required|date',
+            'tipo' => 'required|in:normal,adelanto,liquidacion',
+            'metodo_pago' => 'required|in:efectivo,transferencia',
+            'notas' => 'nullable|string|max:255',
         ]);
 
-        if (Caja::where('user_id', Auth::id())->where('estado', 'abierta')->exists()) {
-            return redirect()->route('cajas.index')->with('error', 'Ya tienes una caja abierta. Cierra el turno anterior primero.');
+        // 1) Cliente
+        $cliente = Cliente::where('idCli', $request->cliente_id)->first();
+        if (!$cliente) {
+            return redirect()->route('cajas.index')->with('error', 'Cliente no encontrado.');
         }
 
-        Caja::create([
-            'user_id' => Auth::id(),
-            'fecha_hora_apertura' => now(),
-            'saldo_inicial' => $request->saldo_inicial,
-            'estado' => 'abierta',
-        ]);
+        // 2) Compra más reciente (para saldo). Ajusta si tu negocio usa otra referencia.
+        $compra = Compra::where('cliente_id', $cliente->idCli)->latest('id')->first();
+        $saldoAnterior = $compra ? (float)$compra->saldo : 0;
 
-        return redirect()->route('cajas.index')->with('success', 'Caja abierta exitosamente con saldo inicial de $' . number_format($request->saldo_inicial, 2));
-    }
+        // 3) Cálculos
+        $mensualidad = (float)$request->mensualidad;
+        $n = (int)$request->mensualidades;
+        $subtotal = $mensualidad * $n;
 
-    /**
-     * Cierra la caja abierta (Modificado para incluir ventas y crear movimiento).
-     */
-    public function cerrarCaja(Request $request)
-    {
-        $caja = Caja::where('user_id', Auth::id())
-            ->where('estado', 'abierta')
-            ->first();
+        $fechaPago = Carbon::parse($request->fecha_pago);
+        $fechaVenc = Carbon::parse($request->fecha_vencimiento);
 
-        if (!$caja) {
-            return redirect()->route('cajas.index')->with('error', 'No se encontró ninguna caja abierta para cerrar.');
+        // ✅ Multa 10% si paga tarde
+        $pagoATiempo = $fechaPago->lte($fechaVenc);
+        $multa = $pagoATiempo ? 0 : round($subtotal * 0.10, 2);
+
+        $total = $subtotal + $multa;
+
+        // ✅ saldo nuevo: solo subtotal reduce deuda
+        $saldoNuevo = max($saldoAnterior - $subtotal, 0);
+
+        // 4) Registrar movimiento como ingreso (en caja sistema)
+        $cajaId = $this->cajaSistemaId();
+
+        $descripcion = "COBRO | Cliente: {$cliente->Nombre} | Tel: {$cliente->telefono} | Dir: {$cliente->direccion} "
+            . "| Mensualidad: $" . number_format($mensualidad, 2)
+            . " | Meses: {$n} | Subtotal: $" . number_format($subtotal, 2)
+            . " | Multa: $" . number_format($multa, 2)
+            . " | Total: $" . number_format($total, 2)
+            . " | Tipo: {$request->tipo}"
+            . " | Vence: {$fechaVenc->toDateString()} | Pagó: {$fechaPago->toDateString()}";
+
+        if (!empty($request->notas)) {
+            $descripcion .= " | Notas: {$request->notas}";
         }
 
-        // <-- MODIFICADO: Usar transacción para asegurar atomicidad -->
         DB::beginTransaction();
-        
         try {
-            // Calcular saldo de movimientos manuales
-            // 1. Sumar todos los ingresos
-            $ingresosManuales = MovimientoCaja::where('caja_id', $caja->id)
-                ->where('tipo', 'ingreso')
-                ->sum('monto');
-
-            // 2. Sumar todos los egresos (todo lo que NO sea 'ingreso')
-            $egresosManuales = MovimientoCaja::where('caja_id', $caja->id)
-                ->where('tipo', '!=', 'ingreso')
-                ->sum('monto');
-
-            // 3. Calcular el saldo final de movimientos
-            $saldoMovimientos = $ingresosManuales - $egresosManuales;
-        
-            // <-- TODO EL CÓDIGO SIGUIENTE AHORA VA DENTRO DEL 'try' -->
-
-            // <-- MODIFICADO: Calcular Ventas en Efectivo para ESTA caja específica -->
-            $ventasEfectivo = Venta::where('user_id', Auth::id()) 
-                ->where('metodo_pago', 'efectivo')
-                ->where('fecha_hora', '>=', $caja->fecha_hora_apertura) // Desde apertura
-                ->where('fecha_hora', '<=', now()) // Hasta el cierre
-                // ->where('caja_id', $caja->id) // Si tuvieras caja_id en Ventas
-                ->sum('total');
-
-            // <-- MODIFICADO: Calcular saldo final incluyendo ventas en efectivo -->
-            $saldoCalculadoCierre = $caja->saldo_inicial + $saldoMovimientos + $ventasEfectivo;
-
-            // <-- NUEVO: Registrar las ventas en efectivo como un movimiento de caja al cerrar -->
-            if ($ventasEfectivo > 0) {
-                MovimientoCaja::create([
-                    'caja_id' => $caja->id,
-                    'user_id' => Auth::id(), // <-- AÑADIDO: Guardar quién hizo el movimiento
-                    'tipo' => 'ingreso',
-                    'descripcion' => 'Ventas en Efectivo del Turno',
-                    'monto' => $ventasEfectivo,
-                    'metodo_pago' => 'sistema', // Indicar que es automático
-                    'created_at' => now(), // Asegurar timestamp
-                    'updated_at' => now(),
-                ]);
-            }
-
-            // Actualizar el registro de caja
-            $caja->update([
-                'fecha_hora_cierre' => now(),
-                'saldo_final' => $saldoCalculadoCierre, // Usar el saldo calculado que incluye ventas
-                'estado' => 'cerrada',
+            MovimientoCaja::create([
+                'caja_id' => $cajaId,
+                'user_id' => Auth::id(),
+                'tipo' => 'ingreso',
+                'descripcion' => $descripcion,
+                'monto' => $total,
+                'metodo_pago' => $request->metodo_pago === 'efectivo' ? 'Efectivo' : 'Transferencia',
             ]);
 
-            DB::commit(); // Confirmar transacción
+            // 5) Actualizar saldo en compras (si existe)
+            if ($compra) {
+                $compra->saldo = $saldoNuevo;
 
-            return redirect()->route('cajas.index')->with('success', 'Caja cerrada exitosamente. Saldo final calculado: $' . number_format($saldoCalculadoCierre, 2));
+                // si tu compra tiene mensualidades restantes, se descuenta
+                if (!is_null($compra->mensualidades)) {
+                    $compra->mensualidades = max(((int)$compra->mensualidades) - $n, 0);
+                }
+
+                $compra->save();
+            }
+
+            DB::commit();
+
+            return redirect()->route('cajas.index')
+                ->with('success', "Cobro registrado. Total: $" . number_format($total, 2) . " | Saldo nuevo: $" . number_format($saldoNuevo, 2));
 
         } catch (\Exception $e) {
-            DB::rollBack(); // Revertir en caso de error
-            \Log::error("Error al cerrar caja: " . $e->getMessage()); // Loguear el error
-            return redirect()->route('cajas.index')->with('error', 'Ocurrió un error al cerrar la caja. Verifique los logs.');
+            DB::rollBack();
+            \Log::error("Error registrarCobro: " . $e->getMessage());
+            return redirect()->route('cajas.index')->with('error', 'Error al registrar el cobro. Revisa los logs.');
         }
     }
 
     // ===================================================================
-    // ============= ¡NUEVA FUNCIÓN PARA MOVIMIENTOS MANUALES! =============
+    // ✅ Si ya NO quieres movimientos manuales, puedes borrar esto.
+    // Si sí lo quieres, lo adaptamos sin caja abierta.
     // ===================================================================
-    /**
-     * Registra un movimiento manual (ingreso o egreso) en la caja abierta.
-     */
     public function registrarMovimiento(Request $request)
     {
         $request->validate([
-            'caja_id' => 'required|exists:cajas,id',
-            'tipo' => 'required|in:ingreso,egreso', // Validar 'ingreso' o 'egreso'
-            'monto' => 'required|numeric|min:0.01', // Monto siempre positivo
+            'tipo' => 'required|in:ingreso,egreso',
+            'monto' => 'required|numeric|min:0.01',
             'descripcion' => 'required|string|max:255',
         ]);
 
-        // Doble chequeo: la caja debe estar abierta y pertenecer al usuario
-        $cajaAbierta = Caja::where('id', $request->caja_id)
-                           ->where('user_id', Auth::id())
-                           ->where('estado', 'abierta')
-                           ->first();
-                           
-        if (!$cajaAbierta) {
-            return redirect()->route('cajas.index')->with('error', 'Error: No se encontró tu caja abierta.');
-        }
+        $cajaId = $this->cajaSistemaId();
 
-        // Guardamos el movimiento usando tu estructura de tabla
         MovimientoCaja::create([
-            'caja_id' => $cajaAbierta->id,
-            'user_id' => Auth::id(), // Guardar quién lo hizo
-            'tipo' => $request->tipo, // 'ingreso' o 'egreso'
+            'caja_id' => $cajaId,
+            'user_id' => Auth::id(),
+            'tipo' => $request->tipo,
             'descripcion' => $request->descripcion,
             'monto' => $request->monto,
-            'metodo_pago' => 'Efectivo (Manual)', // Método de pago descriptivo
+            'metodo_pago' => 'Manual',
         ]);
-        
-        return redirect()->route('cajas.index')->with('success', 'Movimiento manual registrado exitosamente.');
+
+        return redirect()->route('cajas.index')->with('success', 'Movimiento registrado exitosamente.');
     }
 }
