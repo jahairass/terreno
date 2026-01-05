@@ -113,7 +113,9 @@ Route::middleware('auth')->group(function () {
         ->name('inventario.edit')
         ->middleware('permiso:inventario,editar');
 
-    Route::put('inventario/{producto}', [InventarioController::class, 'update'])
+    // Guardar terreno
+    Route::put('inventario/{terreno}', [InventarioController::class, 'update'])
+        ->whereNumber('terreno')
         ->name('inventario.update')
         ->middleware('permiso:inventario,editar');
 
@@ -134,7 +136,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('compras/{compra}', [CompraController::class, 'destroy'])->name('compras.destroy')->middleware('permiso:compras,eliminar');
 
     // ==========================================================
-    // MÓDULO: GESTIÓN DE CAJA (Alias: cajas)
+    // MÓDULO: GESTIÓN DE CAJA
     // ==========================================================
     Route::get('cajas', [CajaController::class, 'index'])
         ->name('cajas.index')
@@ -149,7 +151,7 @@ Route::middleware('auth')->group(function () {
         ->middleware('permiso:cajas,eliminar');
 
     // ==========================================================
-    // MÓDULO: PUNTO DE VENTA (TPV) (Alias: ventas)
+    // MÓDULO: PUNTO DE VENTA (TPV)
     // ==========================================================
 
     Route::get('tpv', [VentaController::class, 'tpv'])

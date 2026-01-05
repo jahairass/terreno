@@ -2,90 +2,113 @@
 
 @section('content')
 <div class="container">
-    {{-- Card centrado --}}
-    <div class="card shadow-sm border-0 mx-auto" style="max-width: 600px;">
-        
-        {{-- Cabecera oscura --}}
-        <div class="card-header bg-dark text-white border-0">
-            <h4 class="mb-0">Ajuste de Terreno: {{ $producto->nombre }}</h4>
-            <small>Categoría: {{ $producto->categoria->nombre ?? 'N/A' }}</small>
+
+    {{-- Encabezado --}}
+    <div class="d-flex justify-content-between align-items-center mb-4 p-3"
+         style="background:#000; border-radius:10px;">
+        <h2 class="mb-0 fw-bold" style="color:yellow;">
+            Editar Terreno: {{ $terreno->codigo }}
+        </h2>
+
+        <a href="{{ route('inventario.index') }}" class="btn btn-outline-warning">
+            Volver al mapa
+        </a>
+    </div>
+
+    {{-- Errores --}}
+    @if ($errors->any())
+        <div class="alert alert-danger">
+            <strong>Corrige estos errores:</strong>
+            <ul class="mb-0">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
         </div>
+    @endif
 
-        {{-- Card body --}}
-        <div class="card-body p-4">
+    <div class="card shadow-sm border-0">
+        <div class="card-body">
 
-            <form action="{{ route('inventario.update', $producto->id) }}" method="POST">
+            <form method="POST" action="{{ route('inventario.update', $terreno->id) }}">
                 @csrf
                 @method('PUT')
 
-                {{-- Sección Estado --}}
-                <h6 class="text-muted">Estado del Terreno</h6>
-                <hr class="mt-1 mb-3 border-secondary">
+                <div class="row g-3">
 
-                <div class="mb-3">
-                    <label class="form-label fw-bold">Estado Actual</label>
-                    <div class="input-group">
-                        <span class="input-group-text">
-                            <i class="fas fa-flag"></i>
-                        </span>
-                        <select name="estado" class="form-select" required>
-                            <option value="disponible" {{ $producto->estado == 'disponible' ? 'selected' : '' }}>
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Código</label>
+                        <input type="text" name="codigo" class="form-control"
+                               value="{{ old('codigo', $terreno->codigo) }}">
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Alcaldía</label>
+                        <input type="text" name="alcaldia" class="form-control"
+                               value="{{ old('alcaldia', $terreno->alcaldia) }}">
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Ubicación</label>
+                        <input type="text" name="ubicacion" class="form-control"
+                               value="{{ old('ubicacion', $terreno->ubicacion) }}">
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Precio</label>
+                        <input type="number" step="0.01" name="precio" class="form-control"
+                               value="{{ old('precio', $terreno->precio) }}">
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="form-label fw-bold">Estado</label>
+                        <select name="estado" class="form-select">
+                            <option value="disponible"
+                                {{ old('estado', $terreno->estado) == 'disponible' ? 'selected' : '' }}>
                                 Disponible
                             </option>
-                            <option value="proceso" {{ $producto->estado == 'proceso' ? 'selected' : '' }}>
-                                En Proceso
+
+                            <option value="en_proceso"
+                                {{ old('estado', $terreno->estado) == 'en_proceso' ? 'selected' : '' }}>
+                                En proceso de venta
                             </option>
-                            <option value="vendido" {{ $producto->estado == 'vendido' ? 'selected' : '' }}>
+
+                            <option value="vendido"
+                                {{ old('estado', $terreno->estado) == 'vendido' ? 'selected' : '' }}>
                                 Vendido
                             </option>
                         </select>
                     </div>
-                </div>
 
-                {{-- Sección Nivel --}}
-                <h6 class="text-muted mt-4">Nivel del Terreno</h6>
-                <hr class="mt-1 mb-3 border-secondary">
-
-                <div class="mb-4">
-                    <label class="form-label fw-bold">Nivel</label>
-                    <div class="input-group">
-                        <span class="input-group-text">
-                            <i class="fas fa-layer-group"></i>
-                        </span>
-                        <select name="nivel" class="form-select" required>
-                            <option value="basico" {{ $producto->nivel == 'basico' ? 'selected' : '' }}>
-                                Básico
-                            </option>
-                            <option value="plus" {{ $producto->nivel == 'plus' ? 'selected' : '' }}>
-                                Plus
-                            </option>
-                            <option value="premium" {{ $producto->nivel == 'premium' ? 'selected' : '' }}>
-                                Premium
-                            </option>
-                        </select>
+                    <div class="col-md-2">
+                        <label class="form-label fw-bold">Fila</label>
+                        <input type="number" name="fila" class="form-control"
+                               value="{{ old('fila', $terreno->fila) }}" min="1">
                     </div>
+
+                    <div class="col-md-2">
+                        <label class="form-label fw-bold">Columna</label>
+                        <input type="number" name="columna" class="form-control"
+                               value="{{ old('columna', $terreno->columna) }}" min="1">
+                    </div>
+
                 </div>
 
-                {{-- Botones --}}
-                <div class="d-flex justify-content-between mt-4">
-                    <a href="{{ route('inventario.index') }}" class="btn btn-secondary">
-                        <i class="fas fa-times me-1"></i> Cancelar
-                    </a>
+                <div class="mt-4 d-flex gap-2">
+                    <button type="submit" class="btn btn-warning fw-bold">
+                        Guardar cambios
+                    </button>
 
-                    @if (Auth::user()->hasPermissionTo('inventario', 'editar'))
-                        <button type="submit" class="btn btn-success">
-                            <i class="fas fa-save me-1"></i> Guardar Ajustes
-                        </button>
-                    @else
-                        <span class="text-danger">No tienes permiso para editar.</span>
-                    @endif
+                    <a href="{{ route('inventario.index') }}" class="btn btn-secondary">
+                        Cancelar
+                    </a>
                 </div>
 
             </form>
+
         </div>
     </div>
+
 </div>
 @endsection
-
-
 
